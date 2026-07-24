@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { GameCanvas } from './components/GameCanvas';
 import { StatsPanel, BuildingPanel, ControlPanel, HappinessGraph, Tutorial } from './components/UI';
+import { InfoPanel } from './components/InfoPanel';
 import { useGame } from './hooks/useGame';
 import './App.css';
 
@@ -14,38 +15,11 @@ function App() {
     isPaused,
     setIsPaused,
     handleCellClick,
+    handleRemoveBuilding,
     handleClearAll,
   } = useGame(50, 50, 1);
 
   const [showTutorial, setShowTutorial] = useState(true);
-
-  const handleCanvasHover = (e) => {
-    const canvas = e.currentTarget;
-    const rect = canvas.getBoundingClientRect();
-    const TILE_SIZE = 32;
-    const x = Math.floor((e.clientX - rect.left) / TILE_SIZE);
-    const y = Math.floor((e.clientY - rect.top) / TILE_SIZE);
-
-    if (x >= 0 && x < gameState.gridWidth && y >= 0 && y < gameState.gridHeight) {
-      setHoveredCell({ x, y });
-    } else {
-      setHoveredCell(null);
-    }
-  };
-
-  const handleCanvasContextMenu = (e) => {
-    e.preventDefault();
-    const canvas = e.currentTarget;
-    const rect = canvas.getBoundingClientRect();
-    const TILE_SIZE = 32;
-    const x = Math.floor((e.clientX - rect.left) / TILE_SIZE);
-    const y = Math.floor((e.clientY - rect.top) / TILE_SIZE);
-
-    const building = gameState.getBuildingAt(x, y);
-    if (building) {
-      // This demonstrates right-click removal
-    }
-  };
 
   return (
     <div className="app">
@@ -71,22 +45,21 @@ function App() {
         </div>
 
         <div className="main-content">
-          <div
-            className="canvas-wrapper"
-            onMouseMove={handleCanvasHover}
-            onContextMenu={handleCanvasContextMenu}
-          >
+          <div className="canvas-wrapper">
             <GameCanvas
               gameState={gameState}
               selectedBuilding={selectedBuilding}
               onCellClick={handleCellClick}
               hoveredCell={hoveredCell}
+              onHover={setHoveredCell}
+              onRemoveBuilding={handleRemoveBuilding}
             />
           </div>
         </div>
 
         <div className="sidebar right-sidebar">
           <StatsPanel gameState={gameState} />
+          <InfoPanel gameState={gameState} selectedBuildingType={selectedBuilding} />
           <ControlPanel
             onPause={() => setIsPaused(!isPaused)}
             isPaused={isPaused}

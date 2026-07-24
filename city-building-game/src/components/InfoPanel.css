@@ -1,0 +1,76 @@
+.info-panel {
+  background: rgba(0, 0, 0, 0.8);
+  border: 2px solid #444;
+  border-radius: 8px;
+  overflow: hidden;
+  color: #fff;
+}
+
+.info-tabs {
+  display: flex;
+  border-bottom: 1px solid #444;
+  gap: 0;
+}
+
+.info-tab {
+  flex: 1;
+  padding: 12px;
+  background: transparent;
+  border: none;
+  color: #aaa;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-bottom: 2px solid transparent;
+}
+
+.info-tab:hover {
+  background: rgba(255, 255, 255, 0.05);
+  color: #fff;
+}
+
+.info-tab.active {
+  color: #fbbf24;
+  border-bottom-color: #fbbf24;
+}
+
+.info-content {
+  padding: 12px;
+}
+
+.info-tab-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.info-stat {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  padding: 6px 0;
+}
+
+.info-stat .label {
+  color: #aaa;
+}
+
+.info-stat .value {
+  font-weight: bold;
+  color: #fff;
+}
+
+.info-stat .value.positive {
+  color: #10b981;
+}
+
+.info-stat .value.negative {
+  color: #ef4444;
+}
+
+.info-tab-content h4 {
+  color: #fbbf24;
+  margin: 8px 0 4px 0;
+  font-size: 12px;
+}

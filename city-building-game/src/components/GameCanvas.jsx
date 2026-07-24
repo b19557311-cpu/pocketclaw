@@ -1,7 +1,7 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useCallback } from 'react';
 import { BUILDING_TYPES, BUILDING_STATS } from '../engine/types';
 
-const TILE_SIZE = 32;
+export const TILE_SIZE = 32;
 const COLORS = {
   grass: '#2d5016',
   water: '#1e40af',
@@ -9,7 +9,7 @@ const COLORS = {
   grid: '#4b5563',
   selected: '#fbbf24',
   power: '#fbbf24',
-  water: '#60a5fa',
+  waterUtility: '#60a5fa',
   road: '#78716c',
 };
 
@@ -23,7 +23,7 @@ const BUILDING_COLORS = {
   park: '#10b981',
 };
 
-export function GameCanvas({ gameState, selectedBuilding, onCellClick, hoveredCell }) {
+export function GameCanvas({ gameState, selectedBuilding, onCellClick, hoveredCell, onHover, onRemoveBuilding }) {
   const canvasRef = useRef(null);
 
   useEffect(() => {
@@ -50,11 +50,11 @@ export function GameCanvas({ gameState, selectedBuilding, onCellClick, hoveredCe
 
         // Draw utilities
         if (cell.utilities.power) {
-          ctx.fillStyle = 'rgba(251, 191, 36, 0.2)';
+          ctx.fillStyle = 'rgba(251, 191, 36, 0.15)';
           ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE);
         }
         if (cell.utilities.water) {
-          ctx.fillStyle = 'rgba(96, 165, 250, 0.2)';
+          ctx.fillStyle = 'rgba(96, 165, 250, 0.15)';
           ctx.fillRect(px, py, TILE_SIZE, TILE_SIZE);
         }
 
@@ -81,18 +81,38 @@ export function GameCanvas({ gameState, selectedBuilding, onCellClick, hoveredCe
       ctx.lineWidth = 1;
       ctx.strokeRect(px, py, width, height);
 
+      // Highlight if hovered
+      if (hoveredCell &&
+          hoveredCell.x >= building.x &&
+          hoveredCell.x < building.x + building.width &&
+          hoveredCell.y >= building.y &&
+          hoveredCell.y < building.y + building.height) {
+        ctx.strokeStyle = '#fff';
+        ctx.lineWidth = 2;
+        ctx.strokeRect(px - 1, py - 1, width + 2, height + 2);
+      }
+
       // Utility indicators
       if (building.powerConnected) {
         ctx.fillStyle = COLORS.power;
         ctx.fillRect(px + 2, py + 2, 6, 6);
       }
       if (building.waterConnected) {
-        ctx.fillStyle = COLORS.water;
+        ctx.fillStyle = COLORS.waterUtility;
         ctx.fillRect(px + width - 8, py + 2, 6, 6);
+      }
+
+      // Draw resident count for residential
+      if (building.type === BUILDING_TYPES.RESIDENTIAL && building.residents > 0) {
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 10px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(`${building.residents}`, px + width / 2, py + height / 2);
       }
     });
 
-    // Draw hovered cell
+    // Draw placement preview
     if (hoveredCell && selectedBuilding) {
       const stats = BUILDING_STATS[selectedBuilding];
       if (stats) {
@@ -122,26 +142,47 @@ export function GameCanvas({ gameState, selectedBuilding, onCellClick, hoveredCe
     }
   }, [gameState, hoveredCell, selectedBuilding]);
 
-  const handleCanvasClick = (e) => {
-    const canvas = canvasRef.current;
-    const rect = canvas.getBoundingClientRect();
-    const x = Math.floor((e.clientX - rect.left) / TILE_SIZE);
-    const y = Math.floor((e.clientY - rect.top) / TILE_SIZE);
-    onCellClick(x, y);
-  };
+  const handleCanvasClick = useCallback((e) => {
+    if (e.button === 0) { // Left click
+      const canvas = canvasRef.current;
+      const rect = canvas.getBoundingClientRect();
+      const x = Math.floor((e.clientX - rect.left) / TILE_SIZE);
+      const y = Math.floor((e.clientY - rect.top) / TILE_SIZE);
+      onCellClick(x, y);
+    }
+  }, [onCellClick]);
 
-  const handleMouseMove = (e) => {
+  const handleContextMenu = useCallback((e) => {
+    e.preventDefault();
     const canvas = canvasRef.current;
     const rect = canvas.getBoundingClientRect();
     const x = Math.floor((e.clientX - rect.left) / TILE_SIZE);
     const y = Math.floor((e.clientY - rect.top) / TILE_SIZE);
-    // Could emit hover event here if needed
-  };
+
+    const building = gameState?.getBuildingAt(x, y);
+    if (building && onRemoveBuilding) {
+      onRemoveBuilding(building.id);
+    }
+  }, [gameState, onRemoveBuilding]);
+
+  const handleMouseMove = useCallback((e) => {
+    const canvas = canvasRef.current;
+    const rect = canvas.getBoundingClientRect();
+    const x = Math.floor((e.clientX - rect.left) / TILE_SIZE);
+    const y = Math.floor((e.clientY - rect.top) / TILE_SIZE);
+
+    if (x >= 0 && x < gameState?.gridWidth && y >= 0 && y < gameState?.gridHeight) {
+      onHover?.({ x, y });
+    } else {
+      onHover?.(null);
+    }
+  }, [gameState, onHover]);
 
   return (
     <canvas
       ref={canvasRef}
       onClick={handleCanvasClick}
+      onContextMenu={handleContextMenu}
       onMouseMove={handleMouseMove}
       style={{
         border: '2px solid #333',

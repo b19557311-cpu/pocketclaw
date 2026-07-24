@@ -70,18 +70,15 @@ export function useGame(gridWidth = 50, gridHeight = 50, ticksPerSecond = 1) {
   }, []);
 
   const handleCellClick = useCallback((x, y) => {
-    const building = gameState.getBuildingAt(x, y);
-
-    // Right-click behavior via modifier key or if building exists
-    if (building) {
-      // In a real implementation, you'd check for right-click
-      // For now, left-click on building removes it
-      removeBuilding(building.id);
-    } else if (selectedBuilding) {
+    if (selectedBuilding) {
       // Place new building
       placeBuilding(x, y, selectedBuilding);
     }
   }, [gameState, selectedBuilding, placeBuilding, removeBuilding]);
+
+  const handleRemoveBuilding = useCallback((buildingId) => {
+    removeBuilding(buildingId);
+  }, [removeBuilding]);
 
   const handleClearAll = useCallback(() => {
     if (window.confirm('Are you sure you want to demolish all buildings?')) {
@@ -98,6 +95,7 @@ export function useGame(gridWidth = 50, gridHeight = 50, ticksPerSecond = 1) {
     isPaused,
     setIsPaused,
     handleCellClick,
+    handleRemoveBuilding,
     handleClearAll,
   };
 }
